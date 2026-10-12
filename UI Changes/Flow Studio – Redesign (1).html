@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Flow Studio – Redesign</title>
+<style>
+:root{--bg:#e8e8ed;--win:#f5f5f7;--side:#ececf0;--card:#fff;--text:#1d1d1f;--sub:#6e6e73;--line:#d2d2d7;--fill:#f0f0f3;--acc:#0071e3;--accT:#fff;--ok:#248a3d;--bad:#d70015;--shadow:0 20px 60px rgba(0,0,0,.18);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#000;--win:#1c1c1e;--side:#232326;--card:#2c2c2e;--text:#f5f5f7;--sub:#a1a1a6;--line:#3a3a3d;--fill:#3a3a3c;--acc:#0a84ff;--ok:#30d158;--bad:#ff453a;--shadow:0 20px 60px rgba(0,0,0,.6)}}
+:root[data-theme="dark"]{--bg:#000;--win:#1c1c1e;--side:#232326;--card:#2c2c2e;--text:#f5f5f7;--sub:#a1a1a6;--line:#3a3a3d;--fill:#3a3a3c;--acc:#0a84ff;--ok:#30d158;--bad:#ff453a;--shadow:0 20px 60px rgba(0,0,0,.6)}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI Variable","Segoe UI",Inter,Roboto,sans-serif;-webkit-font-smoothing:antialiased;padding:28px 16px}
+button,input,select{font:inherit;color:inherit}
+.win{max-width:1260px;margin:0 auto;background:var(--win);border-radius:12px;box-shadow:var(--shadow);overflow:hidden;border:1px solid var(--line)}
+.bar{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--side)}
+.bar b{font-weight:600;font-size:13px}
+.seg{display:inline-flex;background:var(--fill);border-radius:8px;padding:2px}
+.seg button{border:0;background:none;padding:4px 12px;border-radius:6px;cursor:pointer;color:var(--sub);font-size:12px}
+.seg button.on{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.app{display:grid;grid-template-columns:230px 1fr 330px;min-height:680px}
+.side{background:var(--side);border-right:1px solid var(--line);padding:16px 12px;display:flex;flex-direction:column;gap:4px}
+.nav{display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;border:0;background:none;padding:8px 12px;border-radius:8px;cursor:pointer;color:var(--text)}
+.nav:hover{background:var(--fill)}
+.nav.on{background:var(--acc);color:#fff}
+.nav small{opacity:.7}
+.status{margin-top:auto;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--sub)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--sub)}
+.run .dot{background:var(--ok);box-shadow:0 0 0 3px color-mix(in srgb,var(--ok) 25%,transparent)}
+.status strong{display:block;font-size:22px;font-weight:600;margin:6px 0 8px;letter-spacing:-.02em}
+.track{height:6px;border-radius:3px;background:var(--fill);overflow:hidden}
+.track i{display:block;height:100%;width:0;background:var(--acc);transition:width .4s}
+main{padding:28px 32px;min-width:0}
+.view{display:none}.view.on{display:block}
+.head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+h1{font-size:28px;font-weight:700;letter-spacing:-.025em;margin:0}
+.head p{margin:4px 0 0;color:var(--sub)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{border:0;border-radius:8px;padding:7px 14px;background:var(--fill);cursor:pointer;font-weight:500;position:relative}
+.btn:hover{filter:brightness(.96)}
+.btn:focus-visible,.nav:focus-visible,.seg button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.btn.p{background:var(--acc);color:#fff}
+.btn.d{color:var(--bad)}
+.btn.s{background:var(--bad);color:#fff}
+.btn[disabled]{opacity:.4;cursor:default}
+[data-tip]:hover::after{content:attr(data-tip);position:absolute;z-index:9;left:50%;top:calc(100% + 8px);transform:translateX(-50%);width:max-content;max-width:240px;background:#1d1d1f;color:#f5f5f7;font-size:12px;font-weight:400;line-height:1.4;padding:7px 10px;border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.3);pointer-events:none;text-align:left}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:16px}
+.card>h2{font-size:13px;font-weight:600;margin:0;padding:14px 18px 0;color:var(--sub)}
+.item{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:14px 18px;border-top:1px solid var(--line);flex-wrap:wrap}
+.card>h2+.item{border-top:0}
+.item span.l{font-weight:500}.item small{display:block;color:var(--sub);font-weight:400}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:0}
+.step{padding:16px 18px;border-left:1px solid var(--line)}
+.step:first-child{border-left:0}
+.step .n{width:22px;height:22px;border-radius:50%;background:var(--fill);display:grid;place-items:center;font-size:12px;font-weight:600;margin-bottom:8px}
+.step.done .n{background:var(--ok);color:#fff}
+.step p{margin:0 0 10px;color:var(--sub);font-size:13px}
+input[type=text],input[type=number],select{background:var(--fill);border:1px solid transparent;border-radius:8px;padding:7px 10px;min-width:0}
+input[type=text]{width:300px;max-width:100%}input[type=number]{width:84px}
+.sw{appearance:none;width:42px;height:26px;border-radius:13px;background:var(--fill);border:1px solid var(--line);position:relative;cursor:pointer;flex:none;transition:.2s}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.35);transition:.2s}
+.sw:checked{background:var(--ok);border-color:var(--ok)}.sw:checked::after{left:18px}
+.pair{padding:16px 18px;border-top:1px solid var(--line)}
+.pair:first-of-type{border-top:0}
+.pair header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-weight:600}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.cols div{background:var(--fill);border-radius:10px;padding:10px 12px;font-size:13px}
+.cols em{display:block;font-style:normal;color:var(--sub);font-size:12px;margin-bottom:4px}
+.cols p{margin:0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.log{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;min-height:380px;font:12.5px/1.7 ui-monospace,"SF Mono",Consolas,monospace;overflow:auto}
+.log .e{color:var(--sub);font-family:inherit;text-align:center;padding-top:120px}
+.log div span{color:var(--sub);margin-right:10px}
+.insp{border-left:1px solid var(--line);background:var(--side);padding:24px 20px;display:flex;flex-direction:column;gap:14px}
+.pc{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 18px 8px}
+.pc header{display:flex;align-items:center;gap:12px;margin-bottom:8px}.pc header>div{flex:1;min-width:0}
+.pi{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;flex:none}
+.pc h3{font-size:13px;color:var(--sub);font-weight:500;margin:0}
+.pc b{display:block;font-size:20px;font-weight:600;letter-spacing:-.02em;line-height:1.25}
+.pc .r{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--line);font-size:14px}
+.pc .r span:last-child{color:var(--sub);text-align:right}
+.lnk{border:0;background:none;color:var(--acc);cursor:pointer;padding:0;font-size:12px}
+.pc .lnk{font-size:13px;background:var(--fill);padding:5px 13px;border-radius:14px;font-weight:500}
+.wz{max-width:520px;margin:12px auto;text-align:center}.wz h1{font-size:34px}.wz>p{color:var(--sub);font-size:15px;margin:8px 0 0}.dots{display:flex;gap:7px;justify-content:center;margin-bottom:30px}.dots i{width:7px;height:7px;border-radius:50%;background:var(--line)}.dots i.on{background:var(--acc)}
+.ic{width:76px;height:76px;border-radius:19px;background:var(--acc);display:grid;place-items:center;margin:0 auto 20px}.lst{background:var(--card);border:1px solid var(--line);border-radius:14px;text-align:left;margin:24px 0}.lst .item:first-child{border-top:0}.big{padding:11px 28px;font-size:15px;border-radius:10px}.warn{color:color-mix(in srgb,#ff9f0a 70%,var(--text))}.good{color:var(--ok)}.nb{background:var(--acc);color:#fff;border-radius:9px;padding:1px 7px;font-size:11px}
+.big2{font-size:34px;font-weight:700;letter-spacing:-.03em;margin:8px 0 12px}.sub{color:var(--sub)}
+.now{padding:20px 22px}.nowrow{display:flex;gap:18px;margin-top:18px}.th{width:96px;height:140px;border-radius:12px;background:linear-gradient(160deg,#f6c177,#b5651d 60%,#3a2a1a);flex:none}.th.e{background:var(--fill)}
+.pipe{display:flex;gap:10px;margin-top:14px}.stg{flex:1;background:var(--fill);border-radius:12px;padding:11px 14px}.stg small{display:block;color:var(--sub);font-size:12px}.stg b{display:flex;align-items:center;gap:8px;font-weight:600}
+.stg.work{box-shadow:inset 0 0 0 2px var(--acc)}.stg.ok b{color:var(--ok)}.stg.err{box-shadow:inset 0 0 0 2px var(--bad)}.stg.err b{color:var(--bad)}
+.banner{background:color-mix(in srgb,var(--bad) 10%,var(--card));border:1px solid color-mix(in srgb,var(--bad) 40%,transparent);border-radius:12px;padding:14px 16px;margin-top:16px}.banner p{margin:4px 0 12px}
+.chip{font-size:12px;font-weight:500;padding:3px 10px;border-radius:12px;background:var(--fill);color:var(--sub);white-space:nowrap}
+.chip.ok{color:var(--ok);background:color-mix(in srgb,var(--ok) 14%,transparent)}.chip.work{color:var(--acc);background:color-mix(in srgb,var(--acc) 14%,transparent)}.chip.err{color:var(--bad);background:color-mix(in srgb,var(--bad) 14%,transparent)}
+.pr{display:flex;align-items:center;gap:12px;padding:11px 18px;border-top:1px solid var(--line)}.card>h2+.pr{border-top:0}.pr .n{width:22px;color:var(--sub);font-weight:600}.pr .t{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.spin{width:13px;height:13px;border:2px solid var(--line);border-top-color:var(--acc);border-radius:50%;animation:sp .8s linear infinite}@keyframes sp{to{transform:rotate(1turn)}}
+.how{display:grid;grid-template-columns:repeat(3,1fr)}.how div{padding:14px 18px;border-left:1px solid var(--line);font-size:13px;color:var(--sub)}.how div:first-child{border-left:0}.how b{display:block;color:var(--text);font-size:14px;margin-bottom:2px}
+.path{font:13px ui-monospace,Consolas,monospace;background:var(--fill);padding:6px 10px;border-radius:8px}
+@media(max-width:820px){.how{grid-template-columns:1fr}.how div{border-left:0;border-top:1px solid var(--line)}.nowrow{flex-direction:column}.pipe{flex-direction:column}}
+@media(max-width:1160px){.app{grid-template-columns:200px 1fr 280px}main{padding:24px 22px}.insp{padding:20px 14px}}
+@media(max-width:900px){.app{grid-template-columns:1fr}.insp{border-left:0;border-top:1px solid var(--line)}}
+@media(max-width:820px){.app{grid-template-columns:1fr}.side{flex-direction:row;flex-wrap:wrap;border-right:0;border-bottom:1px solid var(--line)}.status{display:none}.steps,.cols{grid-template-columns:1fr}.step{border-left:0;border-top:1px solid var(--line)}main{padding:20px 16px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="win" id="win">
+ <div class="bar"><b>Flow Studio</b>
+  <div class="seg" id="theme" role="group" aria-label="Appearance"><button data-t="light">Light</button><button data-t="auto" class="on">Auto</button><button data-t="dark">Dark</button></div>
+ </div>
+ <div class="app">
+  <aside class="side">
+   <button class="nav on" data-v="start">Setup <span class="nb" id="nb">Required</span></button>
+   <button class="nav" data-v="run">Run</button>
+   <button class="nav" data-v="prompts">Scripts &amp; Prompts</button>
+   <button class="nav" data-v="settings">Settings</button>
+   <button class="nav" data-v="logs">Logs</button>
+  </aside>
+  <main>
+   <section class="view on" id="start"><div class="wz" id="wz"></div></section>
+
+   <section class="view" id="run">
+    <div class="head"><div><h1>Run</h1><p>dynamite-script.md · 8 pairs. Each pair makes an image, then a video.</p></div>
+     <div class="row"><button class="btn s" id="stop" disabled data-tip="Pauses after the current step. Your place is saved.">Stop</button><button class="btn p" id="start" data-tip="Makes an image, then a video, for every pair in the active script.">Start batch</button></div></div>
+    <div class="card now" id="now"></div>
+    <div class="card" id="plist"></div>
+    <div class="card" id="saved"></div>
+   </section>
+
+   <section class="view" id="prompts">
+    <div class="head"><div><h1>Scripts &amp; Prompts</h1><p>Everything about what gets generated lives here.</p></div></div>
+    <div class="card"><h2>How scripts work</h2><div class="how"><div><b>1. Add</b>Paste your .md script files into the scripts folder.</div><div><b>2. Choose</b>Pick the script to run below. Each has up to 8 pairs.</div><div><b>3. Run</b>Press Start batch. Finished scripts move to “completed”.</div></div></div>
+    <div class="card"><h2>Scripts folder</h2>
+     <div class="item"><span class="path">Documents/flow-studio/scripts/</span><div class="row"><button class="btn p" data-tip="Opens the scripts folder in Explorer.">Open folder</button><button class="btn" data-tip="Choose a script from anywhere on your computer.">Browse…</button></div></div>
+     <div class="item"><span class="l">Active script<small>9 scripts waiting in the folder.</small></span><div class="row"><select aria-label="Script"><option>dynamite-script.md</option></select><button class="btn" data-tip="Loads the selected script's pairs.">Load</button><button class="btn" data-tip="Rescans the folder for new files.">Refresh</button></div></div></div>
+    <div class="card"><h2>Script behavior</h2>
+     <div class="item"><span class="l">Start the next script automatically<small>Begins when the current script finishes.</small></span><input class="sw" type="checkbox" checked aria-label="Auto-advance"></div>
+     <div class="item"><span class="l">Move finished scripts to “completed”<small>Keeps the scripts folder tidy.</small></span><input class="sw" type="checkbox" checked aria-label="Archive"></div>
+     <div class="item"><span class="l">Videos per script<small>The next script starts after this many.</small></span><input type="number" value="8" aria-label="Videos per script"></div>
+     <div class="item"><span class="l">Video format</span><select aria-label="Format"><option>9:16 vertical</option><option>16:9 wide</option></select></div></div>
+    <div class="head" style="margin:24px 0 12px"><div><h2 style="margin:0;font-size:20px">Prompt pairs</h2></div><div class="row"><button class="btn d" data-tip="Removes every pair from this script. Can't be undone.">Clear all</button><button class="btn" data-tip="Paste many pairs at once.">Bulk add…</button><button class="btn p">Add pair</button></div></div>
+    <div class="card" id="pairs"></div>
+   </section>
+
+   <section class="view" id="settings">
+    <div class="head"><div><h1>Settings</h1><p>Most people never need to change these.</p></div></div>
+    <div class="card"><h2>Google Flow</h2>
+     <div class="item"><span class="l">Flow address</span><input type="text" value="https://labs.google/fx/tools/flow" aria-label="Flow URL"></div>
+     <div class="item"><span class="l">Project canvas<small>Where images and videos are created.</small></span><input type="text" value="https://flow.google.com/project/52744cb5-fc…" aria-label="Project URL"></div>
+     <div class="item"><span class="l">Saved sign-in folder</span><input type="text" value="chrome_profile" aria-label="Profile folder"></div>
+     <div class="item"><span class="l">Show the browser window<small>Turn off to run in the background.</small></span><input class="sw" type="checkbox" checked aria-label="Show browser"></div></div>
+    <div class="card"><h2>Timing</h2>
+     <div class="item"><span class="l">Image timeout<small>Seconds to wait before giving up.</small></span><input type="number" value="120" aria-label="Image timeout"></div>
+     <div class="item"><span class="l">Video timeout<small>Seconds to wait before giving up.</small></span><input type="number" value="360" aria-label="Video timeout"></div>
+     <div class="item"><span class="l">Pause between pairs<small>Seconds. Helps avoid rate limits.</small></span><input type="number" value="5" aria-label="Pause"></div></div>
+    <div class="card"><h2>Errors</h2>
+     <div class="item"><span class="l">When a prompt is rejected<small>For example a policy violation.</small></span><select aria-label="On reject"><option>Ask me</option><option>Skip the pair</option><option>Stop the batch</option></select></div>
+     <div class="item"><span class="l">Retry a failed step<small>Times before asking you.</small></span><input type="number" value="2" aria-label="Retries"></div>
+     <div class="item"><span class="l">Save progress automatically<small>Lets you resume a script later.</small></span><input class="sw" type="checkbox" checked aria-label="Save progress"></div></div>
+    <div class="card"><h2>Advanced</h2>
+     <div class="item"><span class="l">Reload project before each pair<small>Clears the canvas between images.</small></span><input class="sw" type="checkbox" aria-label="Reload"></div>
+     <div class="item"><span class="l">Test mode: skip image generation<small>Uses the image already on the canvas.</small></span><input class="sw" type="checkbox" aria-label="Skip images"></div>
+     <div class="item"><span class="l">Recalibrate one control<small>Use when a single step stops working.</small></span><div class="row"><select aria-label="Control"><option>Video mode menu</option></select><button class="btn p">Recalibrate</button><button class="btn">View selectors</button></div></div></div>
+   </section>
+
+   <section class="view" id="logs">
+    <div class="head"><div><h1>Logs</h1><p>What the app is doing, in plain language.</p></div>
+     <div class="row"><div class="seg"><button class="on">Simple</button><button>Detailed</button></div><button class="btn">Copy</button><button class="btn">Clear</button><button class="btn">Open file</button></div></div>
+    <div class="log" id="log"><div class="e">No activity yet. Start a batch to see progress here.</div></div>
+   </section>
+  </main>
+  
+<aside class="insp" aria-label="Overview">
+   <section class="pc"><header><i class="pi" style="background:linear-gradient(#5ac8fa,#0a84ff)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-7l-4 3v-3H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/></svg></i><div><h3>Scripts &amp; prompts</h3><b>8 pairs</b></div><button class="lnk" data-go="prompts">Edit</button></header><div class="r"><span>Each pair makes</span><span>1 image + 1 video</span></div><div class="r"><span>Format</span><span>9:16 vertical</span></div></section>
+   <section class="pc"><header><i class="pi" style="background:linear-gradient(#cf8bff,#8e4ec6)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l5 5v12a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM14 3v5h5"/></svg></i><div><h3>Script</h3><b>dynamite-script.md</b></div><button class="lnk" data-go="prompts">Change</button></header><div class="r"><span>Waiting</span><span>9 scripts</span></div><div class="r"><span>When finished</span><span>Starts the next one</span></div></section>
+   <section class="pc"><header><i class="pi" style="background:linear-gradient(#ffb340,#ff9500)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></i><div><h3>Folders</h3><b>3 locations</b></div><button class="lnk" data-go="prompts">Edit</button></header><div class="r"><span>Scripts</span><span>scripts/</span></div><div class="r"><span>Finished</span><span>scripts/completed/</span></div><div class="r"><span>Sign-in</span><span id="pf">Not set up</span></div></section>
+   <section class="pc"><header><i class="pi" style="background:linear-gradient(#98989d,#636366)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg></i><div><h3>Settings</h3><b>Default</b></div><button class="lnk" data-go="settings">Edit</button></header><div class="r"><span>Image timeout</span><span>120 s</span></div><div class="r"><span>Video timeout</span><span>360 s</span></div><div class="r"><span>Test mode</span><span>Off</span></div></section>
+  </aside>
+ </div>
+</div>
+<script>
+var $=function(s){return document.querySelector(s)},$$=function(s){return[].slice.call(document.querySelectorAll(s))};
+var root=document.documentElement;
+$$('#theme button').forEach(function(b){b.onclick=function(){$$('#theme button').forEach(function(x){x.classList.remove('on')});b.classList.add('on');b.dataset.t==='auto'?root.removeAttribute('data-theme'):root.setAttribute('data-theme',b.dataset.t)}});
+$$('.nav').forEach(function(n){n.onclick=function(){$$('.nav,.view').forEach(function(x){x.classList.remove('on')});n.classList.add('on');$('#'+n.dataset.v).classList.add('on')}});
+var T=["Amber dropper, nitroglycerin macro","Warehouse explosion aftermath","Boots on wet cobblestones","Foundry sparks at night","Lakeside dusk smoke","Cracked pressure gauge","Rain on corrugated roof","Final wide: lakeside ruins"];
+var R=[["Cinematic eye-level macro close-up in 9:16 of a single amber glass dropper releasing a thick, golden drop suspended mid-air.","Extreme slow-motion macro push-in along the central axis toward the falling droplet, 240fps."],["Cinematic wide-angle 9:16 shot of the smoking aftermath of an industrial explosion at a lakeside brick warehouse.","Slow atmospheric backward crane shot moving upward away from the rubble as smoke billows into the dusk sky."],["Low-angle 9:16 shot of a worker\u2019s boots on wet cobblestones at dawn, steam rising from a drain.","Gentle dolly forward as steam curls around the boots and the light shifts from blue to gold."]];
+function pp(i){return R[i]||["Cinematic 9:16 shot: "+T[i]+".","Slow camera move through the scene: "+T[i]+"."]}
+$('#pairs').innerHTML=T.map(function(t,i){var p=pp(i);return '<div class="pair"><header>Pair '+(i+1)+'<button class="btn d">Remove</button></header><div class="cols"><div><em>Image prompt</em><p>'+p[0]+'</p></div><div><em>Video prompt</em><p>'+p[1]+'</p></div></div></div>'}).join('');
+function log(m){var l=$('#log');if(l.querySelector('.e'))l.innerHTML='';var d=document.createElement('div');d.innerHTML='<span>'+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'})+'</span>'+m;l.appendChild(d);l.scrollTop=l.scrollHeight}
+var st,cur,dn,sk,run=0,paused=0,fixed=0,started=0,tm;
+function rs(){st=T.map(function(){return{i:'wait',v:'wait'}});cur=0;dn=0;sk=0;paused=0;fixed=0;started=0}rs();
+function isErr(){return st[cur].i==='err'}function isFin(){return dn+sk>=8}
+function chip(p){if(p.i==='err')return['err','Image rejected'];if(p.i==='skip')return['','Skipped'];if(p.v==='ok')return['ok','Done'];if(p.v==='work')return['work','Making video'];if(p.i==='work')return['work','Making image'];return['','Waiting']}
+function stg(n,s){var m={wait:['','Waiting'],work:['work','In progress'],ok:['ok','Done'],err:['err','Rejected'],skip:['','Skipped']}[s];return '<div class="stg '+m[0]+'"><small>'+n+'</small><b>'+(s==='work'?'<i class="spin"></i>':'')+m[1]+'</b></div>'}
+function resume(){run=1;paused=0;clearInterval(tm);tm=setInterval(tick,900);draw()}
+function finish(){clearInterval(tm);run=0;log('Script complete. Moved to completed.');draw()}
+function tick(){if(paused)return;var p=st[cur];if(p.i==='wait'){p.i='work';log('Pair '+(cur+1)+': making image')}else if(p.i==='work'){if(cur===1&&!fixed){p.i='err';paused=1;log('Pair 2: image rejected (policy violation). Progress saved.')}else{p.i='ok';p.v='work';log('Pair '+(cur+1)+': image ready, making video')}}else if(p.v==='work'){p.v='ok';dn++;log('Pair '+(cur+1)+': video done');cur++;if(cur>=8){cur=7;finish();return}}draw()}
+function draw(){
+ var p=st[cur],fin=isFin(),e=isErr(),h;
+ $('#start').textContent=started&&!fin?'Resume batch':'Start batch';$('#start').disabled=run||e;$('#stop').disabled=!run;
+ if(!started){h='<span class="pill"><i class="dot"></i>Ready</span><div class="big2">Ready to run</div><p class="sub" style="margin:0">Press Start batch. You will see each pair\u2019s image and video progress here.</p>'}
+ else{var lbl=fin?'Complete':e?'Needs your attention':run?'Running':'Paused';
+  h='<div class="row" style="justify-content:space-between"><span class="pill'+(run?' run':'')+'"><i class="dot" style="'+(e?'background:var(--bad)':'')+'"></i>'+lbl+'</span><span class="sub">dynamite-script.md</span></div><div class="big2">'+dn+' of 8 videos'+(sk?' <span class="sub" style="font-size:16px;font-weight:500">· '+sk+' skipped</span>':'')+'</div><div class="track"><i style="width:'+((dn+sk)/8*100)+'%"></i></div>';
+  if(!fin)h+='<div class="nowrow"><div class="th'+(p.i==='ok'||p.v!=='wait'&&p.i!=='err'?'':' e')+'"></div><div style="flex:1;min-width:0"><small class="sub">Pair '+(cur+1)+' of 8 \u00b7 '+T[cur]+'</small><p style="margin:4px 0 0">'+pp(cur)[0]+'</p><div class="pipe">'+stg('1 \u00b7 Image',p.i)+stg('2 \u00b7 Video',p.v)+'</div></div></div>';
+  if(e)h+='<div class="banner"><b style="color:var(--bad)">Policy violation on pair '+(cur+1)+' (image)</b><p>Flow declined this image prompt. Rewording the prompt usually fixes it. Your progress is saved, so nothing is lost.</p><div class="row"><button class="btn p" id="rt">Retry</button><button class="btn" id="ed">Edit prompt</button><button class="btn" id="sp">Skip pair</button></div></div>'}
+ $('#now').innerHTML=h;
+ $('#plist').innerHTML='<h2>All pairs</h2>'+st.map(function(q,i){var c=chip(q);return '<div class="pr"><span class="n">'+(i+1)+'</span><span class="t">'+T[i]+'</span><span class="chip '+c[0]+'">'+c[1]+'</span></div>'}).join('');
+ var sub=!started?'Not started':dn+' of 8 done'+(sk?', '+sk+' skipped':'')+(e?' \u00b7 stopped on pair '+(cur+1)+': policy violation':run?' \u00b7 running':fin?' \u00b7 complete':' \u00b7 paused');
+ $('#saved').innerHTML='<h2>Saved progress</h2><div class="item"><span class="l">dynamite-script.md<small>'+sub+'</small></span>'+(started&&!run&&!fin&&!e?'<button class="btn" id="rsm">Resume</button>':'<span class="chip '+(e?'err':run?'work':'')+'">'+(e?'Needs attention':run?'Active':'Ready')+'</span>')+'</div><div class="item"><span class="l">tesla-script.md<small>5 of 8 done \u00b7 pair 6 stopped: policy violation</small></span><span class="chip err">1 issue</span></div><div class="item"><span class="l">anchor-script.md<small>8 of 8 done \u00b7 moved to completed</small></span><span class="chip ok">Complete</span></div>';
+ var b=function(id,f){var x=$(id);if(x)x.onclick=f};
+ b('#rt',function(){fixed=1;st[cur].i='work';log('Retrying pair '+(cur+1));resume()});
+ b('#sp',function(){st[cur].i='skip';st[cur].v='skip';sk++;log('Skipped pair '+(cur+1));cur++;if(cur>=8){cur=7;finish()}else resume()});
+ b('#ed',function(){go('prompts')});b('#rsm',resume)}
+$('#start').onclick=function(){if(!started||isFin())rs();started=1;log('Batch started: dynamite-script.md');resume()};
+$('#stop').onclick=function(){clearInterval(tm);run=0;log('Stopped by you. Progress saved.');draw()};
+draw();
+function go(v){$$('.nav,.view').forEach(function(x){x.classList.remove('on')});$('.nav[data-v='+v+']').classList.add('on');$('#'+v).classList.add('on')}
+$$('[data-go]').forEach(function(b){b.onclick=function(){go(b.dataset.go)}});
+var done=0,s=0,signed=0,cal=0,scan=0,I='<svg width="34" height="34" viewBox="0 0 24 24" fill="#fff"><path d="M8 5.5v13a1 1 0 0 0 1.5.9l10-6.5a1 1 0 0 0 0-1.8l-10-6.5A1 1 0 0 0 8 5.5z"/></svg>';
+function row(a,b,c){return '<div class="item"><span class="l">'+a+'<small>'+b+'</small></span><span class="'+(c||'')+'">'+(c==='good'?'Found':c==='warn'?'Not found':'')+'</span></div>'}
+function wz(){if(done){$('#wz').innerHTML='<div class="ic" style="background:var(--ok)"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div><h1>Setup complete</h1><p>Flow Studio is signed in and calibrated. Come back here any time to redo either step.</p><div class="lst">'+row('Sign-in saved','chrome_profile','good')+row('Flow calibrated','6 of 6 controls','good')+'</div><div class="row" style="justify-content:center"><button class="btn" id="r1">Redo sign-in</button><button class="btn" id="r2">Recalibrate</button></div>';$('#r1').onclick=function(){done=0;s=2;signed=0;wz()};$('#r2').onclick=function(){done=0;s=3;cal=0;wz()};return}var h='<div class="dots">'+[0,1,2,3,4].map(function(i){return '<i class="'+(i<=s?'on':'')+'"></i>'}).join('')+'</div>',b='';
+if(s===0)b='<div class="ic">'+I+'</div><h1>Welcome to Flow Studio</h1><p>Turn written prompts into finished videos, automatically. Setup takes about three minutes.</p><div class="lst">'+row('Check this computer','Look for your folders and saved sign-in.')+row('Sign in to Google Flow','You only do this once.')+row('Teach the app Flow','So it knows where to click.')+'</div><button class="btn p big" data-n="1">Get started</button>';
+if(s===1)b='<h1>Checking this computer</h1><p>Looking for folders next to the app.</p><div class="lst">'+row('App folder','Found at Documents/flow-studio','good')+row('Scripts folder','9 scripts ready to run','good')+(scan?row('Saved sign-in (chrome_profile)','No sign-in found. This looks like a new install.','warn'):'<div class="item"><span class="sub">Scanning…</span></div>')+'</div>'+(scan?'<p class="sub" style="font-size:13px;margin:-8px 0 18px">We will create the sign-in folder for you in the next step.</p><button class="btn p big" data-n="2">Continue</button>':'');
+if(s===2)b='<h1>Sign in to Google Flow</h1><p>A browser window will open. Sign in as you normally would. Your password is never stored by this app.</p><div class="lst" style="padding:28px;text-align:center">'+(signed===0?'<button class="btn p big" id="si">Sign in with Google</button>':signed===1?'<span class="sub">Waiting for you to finish signing in…</span>':'<b class="good" style="font-size:17px">Signed in</b><p class="sub" style="margin:6px 0 0">Saved to chrome_profile. You won’t need to do this again.</p>')+'</div>'+(signed===2?'<button class="btn p big" data-n="3">Continue</button>':'');
+if(s===3)b='<h1>Teach the app Flow</h1><p>The app will click through Flow once to learn where each button is. Keep the browser window visible.</p><div class="lst" style="padding:28px;text-align:center">'+(cal===0?'<button class="btn p big" id="ca">Start calibration</button>':cal===1?'<span class="sub">Calibrating… 3 of 6 controls</span>':'<b class="good" style="font-size:17px">Calibration complete</b>')+'</div>'+(cal===2?'<button class="btn p big" data-n="4">Continue</button>':'');
+if(s===4)b='<div class="ic" style="background:var(--ok)"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div><h1>You’re all set</h1><p>Load a script, then press Start batch.</p><div class="lst">'+row('Sign-in saved','chrome_profile','good')+row('Flow calibrated','6 of 6 controls')+'</div><button class="btn p big" id="gr">Go to Run</button>';
+$('#wz').innerHTML=h+b+(s>0&&s<4?'<div style="margin-top:18px"><button class="lnk" data-n="'+(s-1)+'">Back</button></div>':'');
+$$('[data-n]').forEach(function(x){x.onclick=function(){s=+x.dataset.n;wz()}});
+if(s===1&&!scan)setTimeout(function(){scan=1;if(s===1)wz()},1200);
+if($('#si'))$('#si').onclick=function(){signed=1;wz();setTimeout(function(){signed=2;wz()},1600)};
+if($('#ca'))$('#ca').onclick=function(){cal=1;wz();setTimeout(function(){cal=2;wz()},1600)};
+if($('#gr'))$('#gr').onclick=function(){done=1;if($('#nb'))$('#nb').remove();$('#pf').textContent='chrome_profile';go('run');wz()}}
+wz();
+</script>
+</body>
+</html>

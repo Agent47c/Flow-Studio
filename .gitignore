@@ -1,0 +1,64 @@
+# ==========================================
+# Flow Studio - .gitignore
+# Strictly prevents leaking credentials, session profiles, API keys, or media
+# ==========================================
+
+# Chrome Profile & Browser Session Data (Logins, cookies, tokens, cache)
+chrome_profile/
+chrome_profile*/
+*.crx
+Default/
+Singleton*
+
+# Output & Generated Media
+output/
+*.mp4
+*.webm
+
+# Secrets, Environment & API Keys
+.env
+*.env
+.env.*
+*secret*
+*token*
+*.key
+*.pem
+credentials.json
+
+# Local Configuration (Contains local user URLs and machine paths)
+settings.json
+batch_state.json
+*state.json
+*_failures.txt
+
+# Logs & Debugging Artifacts
+logs/
+*.log
+fail_*.png
+
+# Python & Virtual Environments
+.aitool/
+venv/
+.venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyd
+
+# Operating System & IDE
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary & Scratch Files
+scratch/
+scratch_*.py
+.system_generated/
+.tempmediaStorage/
+.user_uploaded/
+.planning/

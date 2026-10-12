@@ -1,0 +1,31 @@
+{
+  "cfg": {
+    "flow_url": "https://labs.google/fx/tools/flow",
+    "project_url": "",
+    "reload_each_pair": false,
+    "profile_dir": "chrome_profile",
+    "newest_tile": "first",
+    "image_timeout": 120,
+    "video_timeout": 360,
+    "settle_image": 3,
+    "settle_video": 8,
+    "max_retries": 2,
+    "delay_min": 1.0,
+    "delay_max": 3.0,
+    "scripts_dir": "scripts",
+    "move_script_when_done": true,
+    "auto_advance_queue": true,
+    "script_file": "",
+    "skip_image_gen": false,
+    "resume_pair_index": 1,
+    "show_browser_window": true,
+    "pause_between_pairs": 5,
+    "on_reject_action": "Ask me",
+    "save_progress_auto": true,
+    "videos_per_script": 8,
+    "output_dir": "output",
+    "theme": "auto",
+    "setup_complete": false
+  },
+  "pairs": []
+}

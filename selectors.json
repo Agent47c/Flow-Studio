@@ -1,0 +1,11 @@
+{
+  "image_prompt_box": "div.ProseMirror",
+  "image_generate": "button[aria-label=\"Start generation\"]",
+  "image_result": "img.image",
+  "video_mode_menu": "div:nth-of-type(2) > div > flow-image-hotbar > flow-hotbar-container > div > button:nth-of-type(3)",
+  "video_mode": "button:has-text(\"Add to prompt\")",
+  "video_prompt_box": "div.ProseMirror",
+  "video_generate": "button[aria-label=\"Start generation\"]",
+  "video_result": "img.thumbnail",
+  "project_more_options": "div:nth-of-type(2) > div:nth-of-type(3) > div > div > flow-more-options-menu > button"
+}
