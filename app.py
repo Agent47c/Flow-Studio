@@ -416,11 +416,13 @@ class App:
         self._build_top_bar()
         self._build_main_layout()
 
-        # Load initial prompt pairs
+        # Load initial prompt pairs (only non-empty pairs)
         self.resume_pair_index = 1
-        pairs = saved.get("pairs") or [["", ""]] * 8
-        for i, pair in enumerate(pairs, 1):
-            self.add_row(pair[0], pair[1])
+        pairs = saved.get("pairs") or []
+        for pair in pairs:
+            if isinstance(pair, (list, tuple)) and len(pair) >= 2:
+                if (pair[0] and pair[0].strip()) or (pair[1] and pair[1].strip()):
+                    self.add_row(pair[0], pair[1])
 
         self.refresh_scripts_list()
         self.init_pair_stages()
@@ -795,13 +797,15 @@ class App:
 
         # Prompts
         hd_p, rows_p = self.insp_cards["prompts"]
-        hd_p.configure(text=f"{len(self.rows)} pairs")
+        has_script = self.current_script_path is not None and self.current_script_path.exists()
+        valid_count = len(self.rows) if has_script else len([r for r in self.rows if r.get() != ("", "")])
+        hd_p.configure(text=f"{valid_count} pairs" if valid_count > 0 else "0 pairs")
         adv = self.auto_advance_var.get() if hasattr(self, "auto_advance_var") else True
         rows_p[1].configure(text="Auto-advance On" if adv else "Single script")
 
         # Script
         hd_s, rows_s = self.insp_cards["script"]
-        s_name = self.current_script_path.name if self.current_script_path else "None"
+        s_name = self.current_script_path.name if (self.current_script_path and self.current_script_path.exists()) else "None"
         hd_s.configure(text=s_name if len(s_name) < 22 else s_name[:19] + "…")
         rows_s[0].configure(text=f"{self.pending_scripts} scripts")
         adv = self.auto_advance_var.get() if hasattr(self, "auto_advance_var") else True
@@ -1200,7 +1204,9 @@ class App:
 
     # ------------------------------------------------------------- NOW CARD DYNAMICS
     def init_pair_stages(self):
-        tot = max(1, len(self.rows))
+        has_script = self.current_script_path is not None and self.current_script_path.exists()
+        has_pairs = bool(self.rows) and any(r.get() != ("", "") for r in self.rows)
+        tot = len(self.rows) if (has_script or has_pairs) else 0
         self.pair_stages = {}
         for i in range(1, tot + 1):
             self.pair_stages[i] = {"image": "wait", "video": "wait"}
@@ -1210,16 +1216,34 @@ class App:
         for w in self.now_card.winfo_children():
             w.destroy()
 
-        tot = max(1, len(self.rows))
-        s_name = self.current_script_path.name if self.current_script_path else "No script loaded"
+        has_script = self.current_script_path is not None and self.current_script_path.exists()
+        has_pairs = bool(self.rows) and any(r.get() != ("", "") for r in self.rows)
+        tot = len(self.rows) if (has_script or has_pairs) else 0
+
+        s_name = self.current_script_path.name if (self.current_script_path and self.current_script_path.exists()) else "No script loaded"
         if hasattr(self, "run_sub_lbl"):
-            self.run_sub_lbl.configure(text=f"{s_name} · {tot} pairs. Each pair makes an image, then a video.")
+            if not has_script and not has_pairs:
+                self.run_sub_lbl.configure(text="No script loaded · 0 pending scripts in queue.")
+            else:
+                self.run_sub_lbl.configure(text=f"{s_name} · {tot} pairs. Each pair makes an image, then a video.")
 
         container = ctk.CTkFrame(self.now_card, fg_color="transparent")
         container.pack(fill="x", padx=20, pady=20)
 
         # State 1: Not started yet
         if not self.batch_started:
+            if not has_script and not has_pairs:
+                pill = ctk.CTkFrame(container, fg_color="transparent")
+                pill.pack(anchor="w")
+                ctk.CTkLabel(pill, text="●", font=("Segoe UI", 10), text_color=TOKEN_SUB).pack(side="left", padx=(0, 6))
+                ctk.CTkLabel(pill, text="No script active", font=("Segoe UI Variable", 12), text_color=TOKEN_SUB).pack(side="left")
+
+                ctk.CTkLabel(container, text="No script loaded", font=("Segoe UI Variable", 32, "bold"), text_color=TOKEN_TEXT, anchor="w").pack(fill="x", pady=(6, 2))
+                ctk.CTkLabel(container, text="Select or load a script in Scripts & Prompts to queue pairs and start video generation.",
+                             font=("Segoe UI Variable", 13), text_color=TOKEN_SUB, anchor="w").pack(fill="x")
+                self.btn_start.configure(text="Start batch", state="disabled")
+                return
+
             if self.pending_scripts == 0 and not self.is_running:
                 pill = ctk.CTkFrame(container, fg_color="transparent")
                 pill.pack(anchor="w")
@@ -1229,7 +1253,7 @@ class App:
                 ctk.CTkLabel(container, text="All scripts completed!", font=("Segoe UI Variable", 32, "bold"), text_color=TOKEN_TEXT, anchor="w").pack(fill="x", pady=(6, 2))
                 ctk.CTkLabel(container, text="All markdown scripts have been processed and moved to completed/. Add a new markdown script to scripts/ to run another batch.",
                              font=("Segoe UI Variable", 13), text_color=TOKEN_SUB, anchor="w").pack(fill="x")
-                self.btn_start.configure(text="Start batch")
+                self.btn_start.configure(text="Start batch", state="disabled")
                 return
 
             pill = ctk.CTkFrame(container, fg_color="transparent")
@@ -1240,7 +1264,7 @@ class App:
             ctk.CTkLabel(container, text="Ready to run", font=("Segoe UI Variable", 32, "bold"), text_color=TOKEN_TEXT, anchor="w").pack(fill="x", pady=(6, 2))
             ctk.CTkLabel(container, text="Press Start batch. You will see each pair’s image and video progress here.",
                          font=("Segoe UI Variable", 13), text_color=TOKEN_SUB, anchor="w").pack(fill="x")
-            self.btn_start.configure(text="Start batch")
+            self.btn_start.configure(text="Start batch", state="normal")
             return
 
         # State 2: Active / Running / Paused / Needs Attention / Complete
@@ -1468,6 +1492,34 @@ class App:
 
         ctk.CTkLabel(self.all_pairs_card, text="All pairs", font=("Segoe UI Variable", 13, "bold"), text_color=TOKEN_SUB, anchor="w").pack(fill="x", padx=18, pady=(12, 6))
 
+        has_script = self.current_script_path is not None and self.current_script_path.exists()
+        has_pairs = bool(self.rows) and any(r.get() != ("", "") for r in self.rows)
+
+        if not has_script and not has_pairs:
+            empty_box = ctk.CTkFrame(self.all_pairs_card, fg_color="transparent")
+            empty_box.pack(fill="x", padx=18, pady=(8, 14))
+            ctk.CTkLabel(
+                empty_box,
+                text="No script loaded · 0 prompt pairs in queue",
+                font=("Segoe UI Variable", 13),
+                text_color=TOKEN_SUB,
+                anchor="w",
+            ).pack(side="left")
+            btn_load = ctk.CTkButton(
+                empty_box,
+                text="Load script…",
+                width=100,
+                height=26,
+                corner_radius=6,
+                fg_color=TOKEN_FILL,
+                text_color=TOKEN_TEXT,
+                hover_color=TOKEN_LINE,
+                font=("Segoe UI Variable", 11, "bold"),
+                command=lambda: self.switch_view("prompts"),
+            )
+            btn_load.pack(side="right")
+            return
+
         for i, row in enumerate(self.rows, 1):
             st = self.pair_stages.get(i, {"image": "wait", "video": "wait"})
 
@@ -1527,10 +1579,18 @@ class App:
 
         ctk.CTkLabel(self.saved_card, text="Saved progress", font=("Segoe UI Variable", 13, "bold"), text_color=TOKEN_SUB, anchor="w").pack(fill="x", padx=18, pady=(12, 6))
 
-        s_name = self.current_script_path.name if self.current_script_path else "None"
-        tot = len(self.rows)
+        s_name = self.current_script_path.name if (self.current_script_path and self.current_script_path.exists()) else "None"
+        has_script = self.current_script_path is not None and self.current_script_path.exists()
+        has_pairs = bool(self.rows) and any(r.get() != ("", "") for r in self.rows)
+        tot = len(self.rows) if (has_script or has_pairs) else 0
         dn = self.video_generated
         sk = self.skipped_count
+
+        if not has_script and not has_pairs:
+            box = ctk.CTkFrame(self.saved_card, fg_color="transparent")
+            box.pack(fill="x", padx=18, pady=(8, 14))
+            ctk.CTkLabel(box, text="No active script or saved batch progress.", font=("Segoe UI Variable", 12), text_color=TOKEN_SUB, anchor="w").pack(side="left")
+            return
 
         is_clean_complete = (dn >= tot and sk == 0)
         if not self.batch_started and not sk and not dn:
@@ -3129,18 +3189,19 @@ class App:
         self.renumber()
 
     def remove_row(self, row):
-        if len(self.rows) <= 1:
-            return
         row.frame.destroy()
-        self.rows.remove(row)
+        if row in self.rows:
+            self.rows.remove(row)
         self.renumber()
 
     def clear_rows(self):
         if messagebox.askyesno("Clear Prompts", "Remove all prompt pairs from this script?"):
-            for r in self.rows:
+            for r in list(self.rows):
                 r.frame.destroy()
             self.rows = []
-            self.add_row()
+            self.current_script_path = None
+            self.active_script_name = "None"
+            self.renumber()
 
     def renumber(self):
         for i, r in enumerate(self.rows, 1):
@@ -3148,6 +3209,8 @@ class App:
         self.total_pairs = len(self.rows)
         self.update_overview_panel()
         self.render_all_pairs_card()
+        self.render_now_card()
+        self.render_saved_progress_card()
 
     def bulk_add(self):
         win = ctk.CTkToplevel(self.root)
@@ -3227,14 +3290,15 @@ class App:
         else:
             self.script_combo_var.set("No scripts found")
             if not self.is_running and not self.batch_started:
-                if self.current_script_path and (self.current_script_path.parent.name == "completed" or not self.current_script_path.exists()):
+                if not self.current_script_path or self.current_script_path.parent.name == "completed" or not self.current_script_path.exists():
                     self.current_script_path = None
                     self.active_script_name = "None"
 
         self.update_script_status()
 
     def update_script_status(self):
-        if not self.current_script_path:
+        if not self.current_script_path or not self.current_script_path.exists():
+            self.current_script_path = None
             self.active_script_name = "None"
             self.update_overview_panel()
             if hasattr(self, "run_sub_lbl"):
@@ -3243,7 +3307,7 @@ class App:
         self.active_script_name = self.current_script_path.name
         self.update_overview_panel()
         if hasattr(self, "run_sub_lbl"):
-            tot = max(1, len(self.rows))
+            tot = len(self.rows)
             self.run_sub_lbl.configure(text=f"{self.active_script_name} · {tot} pairs. Each pair makes an image, then a video.")
 
     def load_selected_script(self):
@@ -3365,7 +3429,6 @@ class App:
                         for r in list(self.rows):
                             r.frame.destroy()
                         self.rows = []
-                        self.add_row("", "")
                         self.init_pair_stages()
                         self.save_settings()
                 self.render_now_card()
@@ -3400,7 +3463,6 @@ class App:
                     for r in list(self.rows):
                         r.frame.destroy()
                     self.rows = []
-                    self.add_row("", "")
                     self.init_pair_stages()
                     self.save_settings()
                 self.render_now_card()
@@ -3686,8 +3748,12 @@ class App:
             messagebox.showinfo("Running", "Please stop the active batch before restarting.")
             return
 
-        tot = max(1, len(self.rows))
-        s_name = self.current_script_path.name if self.current_script_path else "the active script"
+        tot = len(self.rows)
+        if not self.current_script_path or tot == 0:
+            messagebox.showinfo("No Script", "No active script or prompt pairs are loaded to restart.")
+            return
+
+        s_name = self.current_script_path.name
         ans = messagebox.askyesno(
             "Restart from Pair #1",
             f"Are you sure you want to restart '{s_name}' from Pair #1?\n\n"
@@ -4018,9 +4084,11 @@ class App:
                 elif kind == "done":
                     self.alert_frame.pack_forget()
                     self.is_running = False
-                    is_complete = self.batch_started and (self.video_generated >= max(1, len(self.rows)))
+                    tot_rows = len(self.rows)
+                    is_complete = self.batch_started and (self.video_generated >= tot_rows if tot_rows > 0 else True)
                     btn_t = "Start batch" if is_complete else "▶ Resume batch"
-                    self.btn_start.configure(state="normal", text=btn_t)
+                    btn_st = "normal" if (self.current_script_path and tot_rows > 0) else ("disabled" if not self.current_script_path else "normal")
+                    self.btn_start.configure(state=btn_st, text=btn_t)
                     if hasattr(self, "btn_restart"):
                         self.btn_restart.configure(state="normal")
                     self.btn_stop.configure(state="disabled")
